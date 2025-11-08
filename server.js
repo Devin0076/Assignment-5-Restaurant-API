@@ -1,4 +1,11 @@
-// Import packages, initialize an express app, and define the port you will use
+// Express initialization
+const express = require("express");
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Built-in middleware to parse JSON bodies
+app.use(express.json());
+
 
 
 
@@ -60,4 +67,13 @@ const menuItems = [
   }
 ];
 
-// Define routes and implement middleware here
+// Simple test route to confirm the server works
+app.get("/", (req, res) => {
+  res.send("Tasty Bites API is running!");
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+
