@@ -67,6 +67,63 @@ const menuItems = [
   }
 ];
 
+
+// --- CRUD endpoints for /api/menu ---
+
+// GET /api/menu - Retrieve all menu items
+app.get("/api/menu", (req, res) => {
+  res.status(200).json(menuItems);
+});
+
+// GET /api/menu/:id - Retrieve a specific menu item by ID
+app.get("/api/menu/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const item = menuItems.find(m => m.id === id);
+  if (!item) {
+    return res.status(404).json({ message: "Menu item not found" });
+  }
+  res.status(200).json(item);
+});
+
+// POST /api/menu - Add a new menu item
+app.post("/api/menu", (req, res) => {
+  const newItem = {
+    id: menuItems.length ? Math.max(...menuItems.map(i => i.id)) + 1 : 1,
+    name: req.body.name,
+    description: req.body.description,
+    price: req.body.price,
+    category: req.body.category,
+    ingredients: req.body.ingredients,
+    available: req.body.available ?? true
+  };
+  menuItems.push(newItem);
+  res.status(201).json(newItem);
+});
+
+// PUT /api/menu/:id - Update an existing menu item
+app.put("/api/menu/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = menuItems.findIndex(i => i.id === id);
+  if (index === -1) {
+    return res.status(404).json({ message: "Menu item not found" });
+  }
+  menuItems[index] = { ...menuItems[index], ...req.body };
+  res.status(200).json(menuItems[index]);
+});
+
+// DELETE /api/menu/:id - Remove a menu item
+app.delete("/api/menu/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = menuItems.findIndex(i => i.id === id);
+  if (index === -1) {
+    return res.status(404).json({ message: "Menu item not found" });
+  }
+  menuItems.splice(index, 1);
+  res.status(200).json({ message: "Menu item deleted" });
+});
+
+
+
 // Simple test route to confirm the server works
 app.get("/", (req, res) => {
   res.send("Tasty Bites API is running!");
