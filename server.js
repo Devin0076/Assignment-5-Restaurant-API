@@ -7,6 +7,23 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 
+// Custom Request Logging Middleware 
+function requestLogger(req, res, next) {
+  const timestamp = new Date().toISOString();
+  const base = `[${timestamp}] ${req.method} ${req.originalUrl}`;
+
+  if (req.method === "POST" || req.method === "PUT") {
+    console.log(`${base} | body: ${JSON.stringify(req.body)}`);
+  } else {
+    console.log(base);
+  }
+
+  next();
+}
+
+// Register middleware for all routes
+app.use(requestLogger);
+
 
 
 // Data for the server
@@ -68,7 +85,7 @@ const menuItems = [
 ];
 
 
-// --- CRUD endpoints for /api/menu ---
+// CRUD endpoints for /api/menu 
 
 // GET /api/menu - Retrieve all menu items
 app.get("/api/menu", (req, res) => {
