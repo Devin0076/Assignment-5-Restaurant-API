@@ -201,6 +201,31 @@ app.delete("/api/menu/:id", (req, res) => {
 });
 
 
+// Centralized error handler
+app.use((err, req, res, next) => {
+  // Your logger already prints requests; log errors too:
+  console.error("Unhandled error:", err);
+
+  if (res.headersSent) return next(err);
+  const status = err.status || 500;
+
+  return res.status(status).json({
+    status,
+    error: err.name || "InternalServerError",
+    message: err.message || "Something went wrong"
+  });
+});
+
+
+// 404 for unknown routes
+app.use((req, res) => {
+  return res.status(404).json({
+    status: 404,
+    error: "NotFound",
+    message: `Route ${req.method} ${req.originalUrl} does not exist`
+  });
+});
+
 
 // Simple test route to confirm the server works
 app.get("/", (req, res) => {
