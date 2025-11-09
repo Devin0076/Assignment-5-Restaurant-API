@@ -23,6 +23,67 @@ function requestLogger(req, res, next) {
 
 // Register middleware for all routes
 app.use(requestLogger);
+// Input Validation Middleware
+const { body, validationResult } = require("express-validator");
+
+const allowedCategories = ["appetizer", "entree", "dessert", "beverage"];
+
+const menuItemRules = [
+  body("name")
+    .exists().withMessage("Name is required")
+    .bail()
+    .isString().withMessage("Name must be a string")
+    .bail()
+    .trim()
+    .isLength({ min: 3 }).withMessage("Name must be at least 3 characters long"),
+
+  body("description")
+    .exists().withMessage("Description is required")
+    .bail()
+    .isString().withMessage("Description must be a string")
+    .bail()
+    .trim()
+    .isLength({ min: 10 }).withMessage("Description must be at least 10 characters long"),
+
+  body("price")
+    .exists().withMessage("Price is required")
+    .bail()
+    .isFloat({ gt: 0 }).withMessage("Price must be a number greater than 0")
+    .toFloat(),
+
+  body("category")
+    .exists().withMessage("Category is required")
+    .bail()
+    .isIn(allowedCategories)
+    .withMessage(`Category must be one of: ${allowedCategories.join(", ")}`),
+
+  body("ingredients")
+    .exists().withMessage("Ingredients are required")
+    .bail()
+    .isArray({ min: 1 }).withMessage("Ingredients must be an array with at least 1 ingredient"),
+
+  body("available")
+    .optional()
+    .isBoolean().withMessage("Available must be a boolean")
+    .toBoolean()
+];
+
+function validate(req, res, next) {
+  const errors = validationResult(req);
+  if (errors.isEmpty()) {
+    return next();
+  }
+  const details = errors.array().map(err => ({
+    field: err.path,
+    message: err.msg
+  }));
+  return res.status(400).json({
+    status: 400,
+    error: "ValidationError",
+    message: "Invalid request body",
+    details
+  });
+}
 
 
 
@@ -103,7 +164,7 @@ app.get("/api/menu/:id", (req, res) => {
 });
 
 // POST /api/menu - Add a new menu item
-app.post("/api/menu", (req, res) => {
+app.post("/api/menu", menuItemRules, validate, (req, res) => {
   const newItem = {
     id: menuItems.length ? Math.max(...menuItems.map(i => i.id)) + 1 : 1,
     name: req.body.name,
@@ -118,7 +179,7 @@ app.post("/api/menu", (req, res) => {
 });
 
 // PUT /api/menu/:id - Update an existing menu item
-app.put("/api/menu/:id", (req, res) => {
+app.put("/api/menu/:id", menuItemRules, validate, (req, res) => {
   const id = parseInt(req.params.id);
   const index = menuItems.findIndex(i => i.id === id);
   if (index === -1) {
